@@ -9,27 +9,29 @@ import (
 
 	"github.com/hajimehoshi/ebiten"
 	"github.com/hajimehoshi/ebiten/ebitenutil"
-	"github.com/hajimehoshi/ebiten/examples/resources/images"
+
+	"pushy-penguins/resources/images"
 )
 
 const (
 	screenWidth  = 320
 	screenHeight = 240
 
+	// Player
 	frameOX     = 0
-	frameOY     = 32
-	frameWidth  = 32
-	frameHeight = 32
-	frameNum    = 8
+	frameOY     = 20
+	frameWidth  = 16
+	frameHeight = 20
+	numOfFrames = 3
 
 	playerSpeed    = 1
 	playerAnimRate = 5
 )
 
 var (
-	clock       = 0
-	runnerImage *ebiten.Image
-	player      = new(Player)
+	clock        = 0
+	trainerImage *ebiten.Image
+	player       = new(Player)
 )
 
 type Player struct {
@@ -41,11 +43,11 @@ type Player struct {
 }
 
 func init() {
-	img, _, err := image.Decode(bytes.NewReader(images.Runner_png))
+	trainerImg, _, err := image.Decode(bytes.NewReader(images.Trainer_png))
 	if err != nil {
 		log.Fatal(err)
 	}
-	runnerImage, _ = ebiten.NewImageFromImage(img, ebiten.FilterDefault)
+	trainerImage, _ = ebiten.NewImageFromImage(trainerImg, ebiten.FilterDefault)
 }
 
 func (p *Player) Update(screen *ebiten.Image) {
@@ -74,7 +76,7 @@ func (p *Player) Update(screen *ebiten.Image) {
 }
 
 func (p *Player) Draw(screen *ebiten.Image) {
-	currentFrame := (clock / playerAnimRate) % frameNum
+	currentFrame := (clock / playerAnimRate) % numOfFrames
 
 	sx, sy := frameOX+currentFrame*frameWidth, frameOY
 
@@ -82,9 +84,17 @@ func (p *Player) Draw(screen *ebiten.Image) {
 	runDrawImageOptions.GeoM.Translate(p.PosX, p.PosY)
 
 	if p.VelX > 0 {
-		screen.DrawImage(runnerImage.SubImage(image.Rect(sx, sy, sx+frameWidth, sy+frameHeight)).(*ebiten.Image), runDrawImageOptions)
+		runDrawImageOptions.GeoM.Translate(-2*p.PosX-frameWidth, 0)
+		runDrawImageOptions.GeoM.Scale(-1, 1)
+		screen.DrawImage(trainerImage.SubImage(image.Rect(sx, sy*2, sx+frameWidth, sy*2+frameHeight)).(*ebiten.Image), runDrawImageOptions)
+	} else if p.VelX < 0 {
+		screen.DrawImage(trainerImage.SubImage(image.Rect(sx, sy*2, sx+frameWidth, sy*2+frameHeight)).(*ebiten.Image), runDrawImageOptions)
+	} else if p.VelY > 0 {
+		screen.DrawImage(trainerImage.SubImage(image.Rect(sx, 0, sx+frameWidth, frameHeight)).(*ebiten.Image), runDrawImageOptions)
+	} else if p.VelY < 0 {
+		screen.DrawImage(trainerImage.SubImage(image.Rect(sx, sy, sx+frameWidth, sy+frameHeight)).(*ebiten.Image), runDrawImageOptions)
 	} else {
-		screen.DrawImage(runnerImage.SubImage(image.Rect(0, 0, frameWidth, frameHeight)).(*ebiten.Image), runDrawImageOptions)
+		screen.DrawImage(trainerImage.SubImage(image.Rect(0, 0, frameWidth, frameHeight)).(*ebiten.Image), runDrawImageOptions)
 	}
 }
 
